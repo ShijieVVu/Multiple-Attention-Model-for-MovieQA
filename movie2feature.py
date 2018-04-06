@@ -1,11 +1,18 @@
 # Process video as image sequences
 
+# Path to your downloaded MovieQA directory
+MOVIEQA_PATH = ""
+# Path to your deep model directory "https://github.com/fchollet/deep-learning-models"
+DEEPMODEL_PATH = ""
+# Path to your video feature output directory
+OUTPUT_PATH = ""
+
 import sys
 
-sys.path.insert(0, '/Users/shijiewu/github/MovieQA_benchmark')
+sys.path.insert(0, MOVIEQA_PATH)
 import data_loader
 
-sys.path.insert(0, '/Users/shijiewu/github/deep-learning-models')
+sys.path.insert(0, DEEPMODEL_PATH)
 
 from os import listdir, curdir, unlink
 from os.path import join, isdir
@@ -24,8 +31,8 @@ from os.path import join, isdir, exists
 from subprocess import call
 
 frames_per_sec = 2
-video_base = "/Users/shijiewu/github/MovieQA_benchmark/story/video_clips"
-output_dir = "/Users/shijiewu/github/MovieQA_benchmark/data_processed"
+video_base = MOVIEQA_PATH + "/story/video_clips"
+output_dir = OUTPUT_PATH
 
 base_model = VGG19(weights='imagenet')
 model = Model(inputs=base_model.input, outputs=base_model.get_layer('block5_pool').output)
@@ -46,7 +53,7 @@ for video_clips in vl_qa.values():
 videos = list(videos)
 print("There are total of {} videos".format(len(videos)))
 
-for i, video_name in enumerate(videos[:2], 0):
+for i, video_name in enumerate(videos, 0):
     if i % 10 == 0:
         print("Finished {}th movie conversion".format(i))
     tar_name = video_name[:video_name.find('.')]
