@@ -2,12 +2,12 @@
 
 import sys
 
-sys.path.insert(0, '/Users/shijiewu/github/MovieQA_benchmark')
+sys.path.insert(0, r'C:\Users\WUSHI\github\MovieQA_benchmark')
 import data_loader
 
-sys.path.insert(0, '/Users/shijiewu/github/deep-learning-models')
+sys.path.insert(0, r'C:\Users\WUSHI\github\deep-learning-models')
 
-from os import listdir, curdir, unlink
+from os import listdir, curdir, unlink, rmdir
 from os.path import join, isdir
 from pickle import dump
 
@@ -24,8 +24,8 @@ from os.path import join, isdir, exists
 from subprocess import call
 
 frames_per_sec = 2
-video_base = "/Users/shijiewu/github/MovieQA_benchmark/story/video_clips"
-output_dir = "/Users/shijiewu/github/MovieQA_benchmark/data_processed"
+video_base = r"D:\video_clips"
+output_dir = r"D:\data_processed"
 
 base_model = VGG19(weights='imagenet')
 model = Model(inputs=base_model.input, outputs=base_model.get_layer('block5_pool').output)
@@ -46,9 +46,9 @@ for video_clips in vl_qa.values():
 videos = list(videos)
 print("There are total of {} videos".format(len(videos)))
 
-for i, video_name in enumerate(videos[:2], 0):
+for i, video_name in enumerate(videos, 0):
     if i % 10 == 0:
-        print("Finished {}th movie conversion".format(i))
+        print("Finished {}th of {} movie conversion".format(i, len(videos)))
     tar_name = video_name[:video_name.find('.')]
     # abs_tar_path = join(video_base, tar_name)
     # if not isdir(abs_tar_path):
@@ -56,7 +56,9 @@ for i, video_name in enumerate(videos[:2], 0):
     input_path = join(video_base, tar_name, video_name)
     feature_dir = join(output_dir, video_name)
 
-    if not exists(feature_dir):
+    # start = time()
+    chdir(output_dir)
+    if not exists("{}features.p".format(video_name)):
         input_seq = []
         makedirs(feature_dir)
         chdir(feature_dir)
@@ -75,6 +77,7 @@ for i, video_name in enumerate(videos[:2], 0):
                 img_features = model.predict(x)[0, ...]
                 features.append(img_features.reshape(-1, 512))
                 unlink(file)
-
-        dump(np.array(features), open("features.p", "wb"))
         chdir(output_dir)
+        dump(np.array(features), open("{}features.p".format(video_name), "wb"))
+        rmdir(feature_dir)
+    # print(time() - start)
