@@ -1,11 +1,17 @@
 # Process video as image sequences
 
+# Path to your downloaded MovieQA directory
+MOVIEQA_PATH = ""
+# Path to your deep model directory "https://github.com/fchollet/deep-learning-models"
+DEEPMODEL_PATH = ""
+# Path to your video feature output directory
+OUTPUT_PATH = ""
+
 import sys
 
 sys.path.insert(0, r'C:\Users\WUSHI\github\MovieQA_benchmark')
-import data_loader
-
 sys.path.insert(0, r'C:\Users\WUSHI\github\deep-learning-models')
+import data_loader
 
 from os import listdir, curdir, unlink, rmdir
 from os.path import join, isdir
@@ -26,7 +32,6 @@ from subprocess import call
 frames_per_sec = 2
 video_base = r"D:\video_clips"
 output_dir = r"D:\data_processed"
-
 base_model = VGG19(weights='imagenet')
 model = Model(inputs=base_model.input, outputs=base_model.get_layer('block5_pool').output)
 
