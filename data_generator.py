@@ -6,8 +6,8 @@ from keras.preprocessing.sequence import pad_sequences
 
 
 class DataGenerator(Sequence):
-    def __init__(self, qa_list, batch_size=32, shuffle=False, vocab_size=50000, video_len=10000, subtitle_len=500,
-                 qa_len=40):
+    def __init__(self, qa_list, batch_size=32, shuffle=True, vocab_size=50000, video_len=10000, subtitle_len=500,
+                 qa_len=50):
         'Initialization'
         self.batch_size = batch_size
         self.qa_list = qa_list
@@ -28,10 +28,10 @@ class DataGenerator(Sequence):
         indexes = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
 
         # Find list of IDs
-        list_IDs_temp = [self.qa_list[k] for k in indexes]
+        qa_list_tmp = [self.qa_list[k] for k in indexes]
 
         # Generate data
-        X, y = self.__data_generation(list_IDs_temp)
+        X, y = self.__data_generation(qa_list_tmp)
 
         return X, y
 
@@ -50,8 +50,6 @@ class DataGenerator(Sequence):
         videos = []
         subtitles = []
         for i, qa in enumerate(qa_list_tmp, 0):
-            if i % 100 == 0:
-                print(i)
             video = []
             subtt = []
             for clip in qa.video_clips:
@@ -64,7 +62,7 @@ class DataGenerator(Sequence):
                 subtt.extend(lines)
             video = np.expand_dims(np.array(video), axis=0)
             video = pad_sequences(video, maxlen=self.video_len)
-            assert video.shape == (1, self.video_len, 512)
+            assert video.shape == (1, self.video_len, 512), "Video shape:{}".format(video.shape)
             videos.append(video.squeeze(axis=0))
             tmp = np.zeros((1, self.subtitle_len))
             if subtt != []:
@@ -86,7 +84,7 @@ class DataGenerator(Sequence):
             for answer in qa.answers:
                 tmp = np.zeros((1, self.qa_len))
                 c = np.array(one_hot(question + answer, self.vocab_size)).reshape(1, -1)
-                tmp[:, -c.shape[1]:] = c
+                tmp[:, -c.shape[1]:] = c[:, :self.qa_len]
                 qas2.append(tmp)
             np.array(qas2)
             question_answers.append(qas2)
