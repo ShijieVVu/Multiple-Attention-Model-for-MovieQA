@@ -1,9 +1,10 @@
 from keras.models import load_model
 from data_generator import DataGenerator
+from keras import backend as tf
 import sys
 sys.path.insert(0, r'C:\Users\WUSHI\github\MovieQA_benchmark')
 import data_loader
-model = load_model(r"./model/dan.h5")
+model = load_model(r".\model\dan.h5")
 
 mqa = data_loader.DataLoader()
 vl_qa, training_qas = mqa.get_video_list('train', 'qa_clips')

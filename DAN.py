@@ -82,6 +82,8 @@ class Attention:
         multiplication = multiply
         extraction = Lambda(connection, arguments={'i': 0})
         for i in range(vector_len):
+            if i % 1000 == 0:
+                print(i)
             extraction.arguments = {'i': i}
             vi = extraction(v)
             hidden = multiplication([weight_input(vi), weight_memory(m)])
@@ -186,8 +188,8 @@ model = DAN()
 print('finished overall')
 
 model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])
-model.summary()
-model.save('./model/dan.h5')
+# model.summary()
+# model.save('./model/dan.h5')
 
 import sys
 from data_generator import DataGenerator
@@ -196,10 +198,10 @@ import data_loader
 
 mqa = data_loader.DataLoader()
 vl_qa, training_qas = mqa.get_video_list('train', 'qa_clips')
-training_qa = training_qas[:32]
-training_generator = DataGenerator(training_qa, batch_size=16, vocab_size=vocab_size, subtitle_len=subtitle_len, qa_len=qa_len)
+training_qa = training_qas[:1024]
+training_generator = DataGenerator(training_qa, batch_size=16, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
 validation_qa = training_qas[4096:4224]
-validation_generator = DataGenerator(validation_qa, batch_size=16, vocab_size=vocab_size, subtitle_len=subtitle_len, qa_len=qa_len)
+validation_generator = DataGenerator(validation_qa, batch_size=16, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
 print("starting training")
 model.fit_generator(generator=training_generator, validation_data=validation_generator, epochs=10,
                     use_multiprocessing=False, workers=1)
