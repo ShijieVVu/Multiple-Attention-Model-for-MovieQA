@@ -5,7 +5,7 @@ from keras.optimizers import Adam
 from keras import backend as tf
 import numpy as np
 
-vocab_size = 400000
+vocab_size = 400000,
 video_len = 5000
 video_dim = 512
 qa_len = 50
@@ -35,17 +35,6 @@ def read_glove_vecs():
 
 
 def pretrained_embedding_layer(word_to_vec_map, word_to_index, length, embedding_dim):
-    """
-    Creates a Keras Embedding() layer and loads in pre-trained GloVe 50-dimensional vectors.
-
-    Arguments:
-    word_to_vec_map -- dictionary mapping words to their GloVe vector representation.
-    word_to_index -- dictionary mapping from words to their indices in the vocabulary (400,001 words)
-
-    Returns:
-    embedding_layer -- pretrained layer Keras instance
-    """
-
     vocab_len = len(word_to_index) + 1  # adding 1 to fit Keras embedding (requirement)
 
     emb_matrix = np.zeros((vocab_len, embedding_dim))
@@ -204,4 +193,4 @@ validation_qa = training_qas[4096:4224]
 validation_generator = DataGenerator(validation_qa, batch_size=16, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
 print("starting training")
 model.fit_generator(generator=training_generator, validation_data=validation_generator, epochs=10,
-                    use_multiprocessing=False, workers=1)
+                    use_multiprocessing=True, workers=4)

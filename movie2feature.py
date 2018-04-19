@@ -9,8 +9,8 @@ OUTPUT_PATH = ""
 
 import sys
 
-sys.path.insert(0, r'C:\Users\WUSHI\github\MovieQA_benchmark')
-sys.path.insert(0, r'C:\Users\WUSHI\github\deep-learning-models')
+sys.path.insert(0, '/media/shijie/OS/Users/WUSHI/github/MovieQA_benchmark')
+sys.path.insert(0, '/media/shijie/OS/Users/WUSHI/github/deep-learning-models')
 import data_loader
 
 from os import listdir, curdir, unlink, rmdir
@@ -30,15 +30,15 @@ from os.path import join, isdir, exists
 from subprocess import call
 
 frames_per_sec = 2
-video_base = r"D:\video_clips"
-output_dir = r"D:\data_processed"
+video_base = '/media/shijie/DATA/video_clips'
+output_dir = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/data_processed'
 base_model = VGG19(weights='imagenet')
 model = Model(inputs=base_model.input, outputs=base_model.get_layer('block5_pool').output)
 
 mqa = data_loader.DataLoader()
 
 chdir(output_dir)
-vl_qa, qa = mqa.get_video_list('train', 'qa_clips')
+vl_qa, qa = mqa.get_video_list('val', 'qa_clips')
 
 print("Total number of movie QAs are {}".format(len(qa)))
 

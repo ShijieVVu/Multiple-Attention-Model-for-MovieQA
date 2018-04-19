@@ -11,16 +11,16 @@ class LineType(Enum):
 
 
 # Path to your downloaded MovieQA directory
-MOVIEQA_PATH = r'C:\Users\WUSHI\github\MovieQA_benchmark'
+MOVIEQA_PATH = '/media/shijie/OS/Users/WUSHI/github/MovieQA_benchmark'
 # Path to your video feature output directory
-OUTPUT_PATH = r"D:\subtt1"
+OUTPUT_PATH = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/subtt'
 
 sys.path.insert(0, MOVIEQA_PATH)
 
 import data_loader
 
 mqa = data_loader.DataLoader()
-vl_qa, qa_pairs = mqa.get_video_list('train', 'qa_clips')
+vl_qa, qa_pairs = mqa.get_video_list('test', 'qa_clips')
 
 
 def get_line_type(line):
@@ -53,7 +53,7 @@ for i, qa in enumerate(qa_pairs, 0):
         end_frame = video_name[video_name.find('-') + 1:][video_name[video_name.find('-') + 1:].find('-') + 1:][
                     :video_name[video_name.find('-') + 1:][video_name[video_name.find('-') + 1:].find('-') + 1:].find('.')]
 
-        shot_bound = MOVIEQA_PATH + r'\story\matidx\{}.matidx'.format(imdb_key)
+        shot_bound = MOVIEQA_PATH + '/story/matidx/{}.matidx'.format(imdb_key)
         with open(shot_bound, 'r+') as f:
             time_cuts = f.readlines()
 

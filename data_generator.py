@@ -44,8 +44,8 @@ class DataGenerator(Sequence):
     def __data_generation(self, qa_list_tmp):
         'Generates data containing batch_size samples'  # X : (n_samples, *dim, n_channels)
         # Initialization
-        video_base = r'D:\data_processed'
-        subtt_base = r'D:\subtt'
+        video_base = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/data_processed'
+        subtt_base = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/subtt'
 
         videos = []
         subtitles = []
@@ -53,16 +53,18 @@ class DataGenerator(Sequence):
             video = []
             subtt = []
             for clip in qa.video_clips:
-                abs_path = r'{}\{}features.p'.format(video_base, clip)
+                abs_path = '{}/{}features.p'.format(video_base, clip)
                 frame_feature = load(open(abs_path, 'rb'))
                 video.extend(frame_feature.reshape(-1, 512))
-                abs_path = r'{}\{}.p'.format(subtt_base, clip)
+                abs_path = '{}/{}.p'.format(subtt_base, clip)
                 lines = load(open(abs_path, 'rb'))
                 lines = [item for sublist in [one_hot(line, self.vocab_size) for line in lines] for item in sublist]
                 subtt.extend(lines)
             video = np.expand_dims(np.array(video), axis=0)
             video = pad_sequences(video, maxlen=self.video_len)
-            assert video.shape == (1, self.video_len, 512), "Video shape:{}".format(video.shape)
+            if video.shape != (1, self.video_len, 512):
+                video = np.zeros((1, self.video_len, 512))
+            assert video.shape == (1, self.video_len, 512), "Video shape:{}, qa:{}".format(video.shape, qa)
             videos.append(video.squeeze(axis=0))
             tmp = np.zeros((1, self.subtitle_len))
             if subtt != []:
@@ -90,4 +92,4 @@ class DataGenerator(Sequence):
             question_answers.append(qas2)
         question_answers = np.array(question_answers).squeeze(2)
         labels = np.array(labels).reshape(-1, 5)
-        return [videos, question_answers, subtitles], labels
+        return [question_answers, subtitles], labels
