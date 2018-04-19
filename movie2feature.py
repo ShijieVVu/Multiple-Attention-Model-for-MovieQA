@@ -65,7 +65,8 @@ for i, video_name in enumerate(videos, 0):
     chdir(output_dir)
     if not exists("{}features.p".format(video_name)):
         input_seq = []
-        makedirs(feature_dir)
+        if not isdir(feature_dir):
+            makedirs(feature_dir)
         chdir(feature_dir)
         # Generate images from movie clips
         call(['ffmpeg', '-loglevel', 'panic', '-i', '{}'.format(input_path), '-r', '{}'.format(frames_per_sec),
