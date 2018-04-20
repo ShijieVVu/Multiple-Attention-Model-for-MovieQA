@@ -1,20 +1,22 @@
 from keras.layers import Input, LSTM, Embedding, Dense, concatenate, Lambda, GRU, Activation, Dot, RepeatVector, \
-    multiply, average, add
+    multiply, average, add, merge
 from keras.models import Model, load_model
 from keras.optimizers import Adam
 from keras import backend as tf
+from keras.callbacks import ModelCheckpoint
 import numpy as np
 
-vocab_size = 400000,
-video_len = 5000
+vocab_size = 400000
+video_len = 500
 video_dim = 512
+
 qa_len = 50
 subtitle_len = 200
 embedding_dim = 100
 
-path = r'data\glove.6B.100d.txt'
+path = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/glove.6B.100d.txt'
 
-K = 2
+K = 3
 memory_len = 100
 
 qa_pairs = []
@@ -36,18 +38,12 @@ def read_glove_vecs():
 
 def pretrained_embedding_layer(word_to_vec_map, word_to_index, length, embedding_dim):
     vocab_len = len(word_to_index) + 1  # adding 1 to fit Keras embedding (requirement)
-
     emb_matrix = np.zeros((vocab_len, embedding_dim))
-
     for word, index in word_to_index.items():
         emb_matrix[index, :] = word_to_vec_map[word]
-
-    embedding_layer = Embedding(input_dim=vocab_len, output_dim=embedding_dim, trainable=False, input_length=length)
-
+    embedding_layer = Embedding(input_dim=vocab_len, output_dim=embedding_dim, trainable=True, input_length=length)
     embedding_layer.build((None,))
-
     embedding_layer.set_weights([emb_matrix])
-
     return embedding_layer
 
 
@@ -64,21 +60,21 @@ class Attention:
 
         v = Input(shape=(vector_len, dimension))
         m = Input(shape=(memory_len,))
-        alphas = []
         weight_input = Dense(1, activation='tanh')
         weight_memory = Dense(1, activation='tanh')
-        weight_hidden = Dense(1, activation='softmax')
+        weight_hidden = Dense(vector_len, activation='softmax')
         multiplication = multiply
         extraction = Lambda(connection, arguments={'i': 0})
+        hidden_states = []
         for i in range(vector_len):
             if i % 1000 == 0:
                 print(i)
             extraction.arguments = {'i': i}
             vi = extraction(v)
             hidden = multiplication([weight_input(vi), weight_memory(m)])
-            alpha = weight_hidden(hidden)
-            alphas.append(alpha)
-        alphas = concatenate(alphas)
+            hidden_states.append(hidden)
+        hidden_states = concatenate(hidden_states)
+        alphas = weight_hidden(hidden_states)
         attented_v = Lambda(apply_weights, arguments={'length': dimension})([v, alphas])
         self.model = Model([v, m], outputs=attented_v)
 
@@ -102,9 +98,6 @@ print('finished S_Att')
 Q_Att = Attention(qa_len, embedding_dim).model
 print('finished Q_Att')
 
-# video_lstm = LSTM(256, return_sequences=True)
-# text_lstm = LSTM(256, return_sequences=True)
-video_lstm = GRU(units=embedding_dim, return_sequences=True)
 qa_lstm = GRU(units=embedding_dim, return_sequences=True)
 sub_lstm = GRU(units=embedding_dim, return_sequences=True)
 
@@ -115,13 +108,12 @@ class ScoreModel:
         qa = Input(shape=(qa_len,))
         subt = Input(shape=(subtitle_len,))
 
-        vp = video_lstm(vi)  # the output will be a vector
         qa1 = qa_encoder(qa)
         qa1 = qa_lstm(qa1)
         sub1 = sub_encoder(subt)
         sub1 = sub_lstm(sub1)
 
-        v0 = p0(pair_average(vp))
+        v0 = p0(pair_average(vi))
         u0 = pair_average(sub1)
         q0 = pair_average(qa1)
 
@@ -154,43 +146,43 @@ class ScoreModel:
         print('finished score_model')
 
 
-def DAN():
-    score_model = ScoreModel().model
+class DAN:
+    def __init__(self):
+        score_model = ScoreModel().model
 
-    vi = Input(shape=(video_len, video_dim))
-    subt = Input(shape=(subtitle_len,))
-    qai = Input(shape=(5, qa_len))
+        vi = Input(shape=(video_len, video_dim))
+        subt = Input(shape=(subtitle_len,))
+        qai = Input(shape=(5, qa_len))
 
-    qa = []
-    for i in range(5):
-        extraction.arguments = {'i': i}
-        qa.append(extraction(qai))
-    scores = []
-    for i in range(5):
-        score = score_model([vi, qa[i], subt])
-        scores.append(score)
-    prediction = Activation('softmax')(concatenate(scores))
-    return Model([vi, qai, subt], outputs=prediction)
+        qa = []
+        for i in range(5):
+            extraction.arguments = {'i': i}
+            qa.append(extraction(qai))
+        scores = []
+        for i in range(5):
+            score = score_model([vi, qa[i], subt])
+            scores.append(score)
+        prediction = Activation('softmax')(concatenate(scores))
+        self.model = Model([vi, qai, subt], outputs=prediction)
 
 
-model = DAN()
+dan = DAN().model
 print('finished overall')
 
-model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])
-# model.summary()
-# model.save('./model/dan.h5')
+dan.compile(loss='categorical_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])
+dan.save('./model/dan.h5')
 
 import sys
 from data_generator import DataGenerator
-sys.path.insert(0, r'C:\Users\WUSHI\github\MovieQA_benchmark')
+sys.path.insert(0, '/media/shijie/OS/Users/WUSHI/github/MovieQA_benchmark')
 import data_loader
 
 mqa = data_loader.DataLoader()
-vl_qa, training_qas = mqa.get_video_list('train', 'qa_clips')
-training_qa = training_qas[:1024]
-training_generator = DataGenerator(training_qa, batch_size=16, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
-validation_qa = training_qas[4096:4224]
-validation_generator = DataGenerator(validation_qa, batch_size=16, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
+training_qas = mqa.get_video_list('train', 'qa_clips')[1]
+validation_qas = mqa.get_video_list('val', 'qa_clips')[1]
+training_generator = DataGenerator(training_qas, batch_size=32, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
+validation_generator = DataGenerator(validation_qas, batch_size=32, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
+check_point = ModelCheckpoint('./model/dan2.{epoch:02d}-{val_acc:.4f}.h5', save_best_only=True)
 print("starting training")
-model.fit_generator(generator=training_generator, validation_data=validation_generator, epochs=10,
-                    use_multiprocessing=True, workers=4)
+dan.fit_generator(generator=training_generator, validation_data=validation_generator, epochs=50,
+                  use_multiprocessing=True, workers=4, callbacks=[check_point])

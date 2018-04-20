@@ -1,2 +1,5 @@
 .DS_STORE
 .idea/
+data/
+model/
+__pycache__/

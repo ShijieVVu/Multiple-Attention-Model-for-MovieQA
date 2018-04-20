@@ -75,21 +75,38 @@ class DataGenerator(Sequence):
         videos = np.array(videos)
         subtitles = np.squeeze(np.array(subtitles), axis=1)
 
+        indexes = np.arange(5)
         labels = []
         question_answers = []
         for qa in qa_list_tmp:
             tmp = np.zeros(5)
             tmp[qa.correct_index] = 1
-            labels.append(tmp)
-            question = qa.question
+            label_qa = list(zip(tmp, [qa.question + answer for answer in qa.answers]))
+            np.random.shuffle(indexes)
             qas2 = []
-            for answer in qa.answers:
+            correcto = []
+            for j in indexes:
                 tmp = np.zeros((1, self.qa_len))
-                c = np.array(one_hot(question + answer, self.vocab_size)).reshape(1, -1)
+                c = np.array(one_hot(label_qa[j][1], self.vocab_size)).reshape(1, -1)
                 tmp[:, -c.shape[1]:] = c[:, :self.qa_len]
                 qas2.append(tmp)
-            np.array(qas2)
+                correcto.append(label_qa[j][0])
+            labels.append(np.array(correcto))
             question_answers.append(qas2)
+        #
+        # for qa in qa_list_tmp:
+        #     tmp = np.zeros(5)
+        #     tmp[qa.correct_index] = 1
+        #     labels.append(tmp)
+        #     question = qa.question
+        #     qas2 = []
+        #     for answer in qa.answers:
+        #         tmp = np.zeros((1, self.qa_len))
+        #         c = np.array(one_hot(question + answer, self.vocab_size)).reshape(1, -1)
+        #         tmp[:, -c.shape[1]:] = c[:, :self.qa_len]
+        #         qas2.append(tmp)
+        #     np.array(qas2)
+        #     question_answers.append(qas2)
         question_answers = np.array(question_answers).squeeze(2)
         labels = np.array(labels).reshape(-1, 5)
         return [question_answers, subtitles], labels

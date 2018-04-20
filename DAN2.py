@@ -1,5 +1,5 @@
 from keras.layers import Input, LSTM, Embedding, Dense, concatenate, Lambda, GRU, Activation, Dot, RepeatVector, \
-    multiply, average, add, merge
+    multiply, average, add, merge, Bidirectional
 from keras.models import Model, load_model
 from keras.optimizers import Adam
 from keras import backend as tf
@@ -14,7 +14,7 @@ qa_len = 50
 subtitle_len = 200
 embedding_dim = 100
 
-path = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/glove.6B.100d.txt'
+embedding_path = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/glove.6B.100d.txt'
 
 K = 2
 memory_len = 100
@@ -26,7 +26,7 @@ labels = []
 
 
 def read_glove_vecs():
-    with open(path, 'r+', encoding="utf8", errors='ignore') as f:
+    with open(embedding_path, 'r+', encoding="utf8", errors='ignore') as f:
         lines = [line.rstrip().split(' ') for line in f.readlines()]
     word_to_index = {}
     word_to_vec_map = {}
@@ -41,7 +41,7 @@ def pretrained_embedding_layer(word_to_vec_map, word_to_index, length, embedding
     emb_matrix = np.zeros((vocab_len, embedding_dim))
     for word, index in word_to_index.items():
         emb_matrix[index, :] = word_to_vec_map[word]
-    embedding_layer = Embedding(input_dim=vocab_len, output_dim=embedding_dim, trainable=False, input_length=length)
+    embedding_layer = Embedding(input_dim=vocab_len, output_dim=embedding_dim, trainable=True, input_length=length)
     embedding_layer.build((None,))
     embedding_layer.set_weights([emb_matrix])
     return embedding_layer
@@ -101,9 +101,9 @@ print('finished Q_Att')
 
 # video_lstm = LSTM(256, return_sequences=True)
 # text_lstm = LSTM(256, return_sequences=True)
-video_lstm = GRU(units=embedding_dim, return_sequences=True)
-qa_lstm = GRU(units=embedding_dim, return_sequences=True)
-sub_lstm = GRU(units=embedding_dim, return_sequences=True)
+# video_lstm = GRU(units=embedding_dim, return_sequences=True)
+qa_lstm = Bidirectional(GRU(units=embedding_dim, return_sequences=True))
+sub_lstm = Bidirectional(GRU(units=embedding_dim, return_sequences=True))
 
 
 class ScoreModel:
@@ -146,9 +146,7 @@ class ScoreModel:
             # m = add([m, average([uv, uq, vq])])
             m = add([m, uq])
 
-        x = Dense(100, activation='relu')(m)
-        x = Dense(50, activation='relu')(x)
-        score = Dense(1)(x)
+        score = Dense(1)(m)
         self.model = Model(inputs=[qa, subt], outputs=score)
         print('finished score_model')
 
@@ -187,9 +185,9 @@ import data_loader
 mqa = data_loader.DataLoader()
 training_qas = mqa.get_video_list('train', 'qa_clips')[1]
 validation_qas = mqa.get_video_list('val', 'qa_clips')[1]
-training_generator = DataGenerator(training_qas, batch_size=32, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
-validation_generator = DataGenerator(validation_qas, batch_size=32, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
-check_point = ModelCheckpoint('./model/dan2.{epoch:02d}-{val_acc:.2f}.h5', save_best_only=True)
+training_generator = DataGenerator(training_qas, batch_size=8, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
+validation_generator = DataGenerator(validation_qas, batch_size=8, vocab_size=vocab_size, video_len=video_len, subtitle_len=subtitle_len, qa_len=qa_len)
+check_point = ModelCheckpoint('./model/dan2.{epoch:02d}-{val_acc:.4f}.h5', save_best_only=True)
 print("starting training")
-model.fit_generator(generator=training_generator, validation_data=validation_generator, epochs=10,
+model.fit_generator(generator=training_generator, validation_data=validation_generator, epochs=50,
                     use_multiprocessing=True, workers=4, callbacks=[check_point])
