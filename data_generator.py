@@ -93,20 +93,6 @@ class DataGenerator(Sequence):
                 correcto.append(label_qa[j][0])
             labels.append(np.array(correcto))
             question_answers.append(qas2)
-        #
-        # for qa in qa_list_tmp:
-        #     tmp = np.zeros(5)
-        #     tmp[qa.correct_index] = 1
-        #     labels.append(tmp)
-        #     question = qa.question
-        #     qas2 = []
-        #     for answer in qa.answers:
-        #         tmp = np.zeros((1, self.qa_len))
-        #         c = np.array(one_hot(question + answer, self.vocab_size)).reshape(1, -1)
-        #         tmp[:, -c.shape[1]:] = c[:, :self.qa_len]
-        #         qas2.append(tmp)
-        #     np.array(qas2)
-        #     question_answers.append(qas2)
         question_answers = np.array(question_answers).squeeze(2)
         labels = np.array(labels).reshape(-1, 5)
         return [question_answers, subtitles], labels
