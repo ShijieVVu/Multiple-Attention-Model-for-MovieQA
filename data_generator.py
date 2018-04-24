@@ -16,6 +16,7 @@ class DataGenerator(Sequence):
         self.video_len = video_len
         self.subtitle_len = subtitle_len
         self.qa_len = qa_len
+        self.word2index = load(open('./data/word2index.p', 'rb'))
         self.on_epoch_end()
 
     def __len__(self):
@@ -44,8 +45,8 @@ class DataGenerator(Sequence):
     def __data_generation(self, qa_list_tmp):
         'Generates data containing batch_size samples'  # X : (n_samples, *dim, n_channels)
         # Initialization
-        video_base = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/data_processed'
-        subtt_base = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/subtt'
+        video_base = '/media/shijie/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/data_processed'
+        subtt_base = '/media/shijie/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/subtt'
 
         videos = []
         subtitles = []
