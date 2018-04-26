@@ -3,6 +3,7 @@ from keras.utils import Sequence
 from pickle import load
 from keras.preprocessing.text import one_hot
 from keras.preprocessing.sequence import pad_sequences
+import gc
 
 
 class DataGenerator(Sequence):
@@ -38,6 +39,7 @@ class DataGenerator(Sequence):
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
+        gc.collect()
         self.indexes = np.arange(len(self.qa_list))
         if self.shuffle == True:
             np.random.shuffle(self.indexes)

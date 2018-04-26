@@ -9,22 +9,16 @@ import numpy as np
 video_len = 5000
 video_dim = 512
 
-vocab_size = 10000
+vocab_size = 5000
 qa_len = 50
 subtitle_len = 150
-embedding_dim = 50
+embedding_dim = 10
 
 embedding_path = '/media/shijie/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/glove.6B.100d.txt'
 
-K = 2
-hidden_size = 256
+K = 3
+hidden_size = 10
 memory_size = 2 * hidden_size
-
-qa_pairs = []
-video_features = []
-subtitles = []
-labels = []
-
 
 def read_glove_vecs():
     with open(embedding_path, 'r+', encoding="utf8", errors='ignore') as f:
@@ -106,8 +100,9 @@ print('finished Q_Att')
 # video_lstm = LSTM(256, return_sequences=True)
 # text_lstm = LSTM(256, return_sequences=True)
 # video_lstm = GRU(units=embedding_dim, return_sequences=True)
-qa_lstm = Bidirectional(LSTM(units=hidden_size, return_sequences=True), merge_mode='concat')
-sub_lstm = Bidirectional(LSTM(units=hidden_size, return_sequences=True), merge_mode='concat')
+lstm_layer = Bidirectional(LSTM(units=hidden_size, return_sequences=True), merge_mode='concat')
+qa_lstm = lstm_layer
+sub_lstm = lstm_layer
 
 
 class ScoreModel:
@@ -188,7 +183,9 @@ from data_generator import DataGenerator
 sys.path.insert(0, '/media/shijie/Users/WUSHI/github/MovieQA_benchmark')
 import data_loader
 
-batch_size = 8
+batch_size = 64
+epochs = 50
+workers = 2
 
 mqa = data_loader.DataLoader()
 training_qas = mqa.get_video_list('train', 'qa_clips')[1]
@@ -202,9 +199,9 @@ check_point = ModelCheckpoint('./model/dan2.{epoch:02d}-{val_acc:.4f}.h5', save_
 print("starting training")
 model.fit_generator(training_generator,
                     steps_per_epoch=nb_train_samples // batch_size,
-                    epochs=50,
+                    epochs=epochs,
                     callbacks=[check_point],
                     validation_data=validation_generator,
                     validation_steps=nb_validation_samples // batch_size,
-                    workers=1,
+                    workers=workers,
                     use_multiprocessing=True)
