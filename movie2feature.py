@@ -1,16 +1,17 @@
 # Process video as image sequences
 
 # Path to your downloaded MovieQA directory
-MOVIEQA_PATH = ""
+MOVIEQA_PATH = '/media/shijie/Users/WUSHI/github/MovieQA_benchmark'
 # Path to your deep model directory "https://github.com/fchollet/deep-learning-models"
-DEEPMODEL_PATH = ""
+DEEPMODEL_PATH = '/media/shijie/Users/WUSHI/github/deep-learning-models'
 # Path to your video feature output directory
-OUTPUT_PATH = ""
+OUTPUT_PATH = '/media/shijie/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/data_processed'
+# Path to your video clips directory
+VIDEO_CLIPS_DIR = '/media/shijie/DATA/video_clips'
 
 import sys
-
-sys.path.insert(0, '/media/shijie/OS/Users/WUSHI/github/MovieQA_benchmark')
-sys.path.insert(0, '/media/shijie/OS/Users/WUSHI/github/deep-learning-models')
+sys.path.insert(0, MOVIEQA_PATH)
+sys.path.insert(0, DEEPMODEL_PATH)
 import data_loader
 
 from os import listdir, curdir, unlink, rmdir
@@ -30,8 +31,8 @@ from os.path import join, isdir, exists
 from subprocess import call
 
 frames_per_sec = 2
-video_base = '/media/shijie/DATA/video_clips'
-output_dir = '/media/shijie/OS/Users/WUSHI/github/Multiple-Attention-Model-for-MovieQA/data/data_processed'
+video_base = VIDEO_CLIPS_DIR
+output_dir = OUTPUT_PATH
 base_model = VGG19(weights='imagenet')
 model = Model(inputs=base_model.input, outputs=base_model.get_layer('block5_pool').output)
 
